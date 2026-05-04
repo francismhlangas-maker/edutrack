@@ -27,7 +27,8 @@ QR_BASE.mkdir(parents=True, exist_ok=True)
 GRACE_MINUTES     = 5
 EARLY_OUT_MINUTES = 5
 PLATFORM_NAME     = "EduTrack"
-PLATFORM_URL      = "https://edutrack.onrender.com"   # update after deploy
+import os
+PLATFORM_URL = os.environ.get("PLATFORM_URL", "https://edutrack-urrt.onrender.com")
 
 # ── Context ───────────────────────────────────────────────────────────────────
 @app.context_processor
