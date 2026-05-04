@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EduTrack – Super Admin</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--primary:#0f172a;--accent:#e8a020;--bg:#0f172a;--card:#1e293b;--border:#334155;--text:#e2e8f0;--muted:#94a3b8}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+.topbar{background:#1e293b;border-bottom:1px solid var(--border);padding:14px 30px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-size:1.2rem;font-weight:800;color:#fff}.logo span{color:var(--accent)}
+.topbar-right{display:flex;gap:12px;align-items:center;font-size:.82rem;color:var(--muted)}
+.topbar-right a{color:var(--accent);font-weight:600;text-decoration:none}
+.content{padding:24px 30px;flex:1}
+.stats-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:24px}
+.stat{background:var(--card);border-radius:10px;padding:18px;border:1px solid var(--border);text-align:center}
+.stat-val{font-size:2rem;font-weight:800;color:var(--accent)}
+.stat-lbl{font-size:.72rem;color:var(--muted);margin-top:4px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+.card{background:var(--card);border-radius:10px;border:1px solid var(--border);margin-bottom:18px}
+.card-header{padding:13px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-header h3{font-size:.9rem;font-weight:600;color:#fff}
+table{width:100%;border-collapse:collapse;font-size:.8rem}
+th{text-align:left;padding:8px 12px;background:rgba(255,255,255,.04);font-weight:600;color:var(--muted);border-bottom:1px solid var(--border)}
+td{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle;color:var(--text)}
+tr:hover td{background:rgba(255,255,255,.03)}
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:.7rem;font-weight:600}
+.badge-green{background:#14532d;color:#86efac}.badge-yellow{background:#713f12;color:#fde68a}
+.badge-red{background:#7f1d1d;color:#fca5a5}.badge-gray{background:#1e293b;color:#94a3b8}
+.badge-blue{background:#1e3a5f;color:#93c5fd}
+.btn{padding:6px 14px;border-radius:6px;border:none;cursor:pointer;font-size:.78rem;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:5px}
+.btn-accent{background:var(--accent);color:#fff}
+.btn-green{background:#16a34a;color:#fff}
+.btn-red{background:#ef4444;color:#fff}
+.btn-gray{background:#334155;color:var(--text)}
+.btn-blue{background:#2563a8;color:#fff}
+input,select,textarea{width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:.84rem;outline:none;background:#0f172a;color:var(--text)}
+input:focus,select:focus{border-color:var(--accent)}
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:.78rem;font-weight:600;color:var(--muted);margin-bottom:4px}
+.flash{padding:10px 14px;border-radius:7px;margin-bottom:14px;font-size:.83rem;background:#14532d;border:1px solid #166534;color:#86efac}
+.code-box{font-family:monospace;font-size:1rem;letter-spacing:.08em;background:#0f172a;
+  border:1px solid var(--accent);border-radius:8px;padding:10px 16px;color:var(--accent);
+  display:inline-block;margin:4px 0}
+.waiver-alert{background:#713f12;border:1px solid #92400e;border-radius:8px;
+  padding:12px 16px;margin-bottom:16px;font-size:.84rem;color:#fde68a}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo">Edu<span>Track</span> &nbsp;<span style="font-size:.75rem;color:#94a3b8;font-weight:400">Super Admin</span></div>
+  <div class="topbar-right">
+    <span>{{ now().strftime('%d %b %Y %H:%M') }}</span>
+    <a href="{{ url_for('super_stats') }}">📊 Stats</a>
+    <a href="{{ url_for('super_logout') }}">Logout</a>
+  </div>
+</div>
+
+<div class="content">
+  {% with messages=get_flashed_messages(with_categories=true) %}
+    {% for cat,msg in messages %}
+    <div class="flash">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  {% if waiver_pending > 0 %}
+  <div class="waiver-alert">
+    ⚠️ <strong>{{ waiver_pending }} fee waiver application(s) pending review.</strong>
+    Scroll down to the schools table to approve or deny.
+  </div>
+  {% endif %}
+
+  <!-- KPIs -->
+  <div class="stats-grid">
+    <div class="stat"><div class="stat-val">{{ total_schools }}</div><div class="stat-lbl">Total Schools</div></div>
+    <div class="stat"><div class="stat-val" style="color:#86efac">{{ active_schools }}</div><div class="stat-lbl">Active</div></div>
+    <div class="stat"><div class="stat-val" style="color:#fde68a">{{ trial_schools }}</div><div class="stat-lbl">On Trial</div></div>
+    <div class="stat"><div class="stat-val" style="color:#f87171">{{ waiver_pending }}</div><div class="stat-lbl">Waiver Pending</div></div>
+    <div class="stat"><div class="stat-val">{{ total_teachers }}</div><div class="stat-lbl">Total Teachers</div></div>
+    <div class="stat"><div class="stat-val">{{ total_scans }}</div><div class="stat-lbl">Total Scans</div></div>
+  </div>
+
+  <div class="grid-2">
+    <!-- Generate Codes -->
+    <div class="card">
+      <div class="card-header"><h3>⚡ Generate Access Code</h3></div>
+      <div style="padding:18px">
+        <form method="POST" action="{{ url_for('generate_code') }}">
+          <div class="form-group"><label>Plan</label>
+            <select name="plan"><option value="basic">Basic</option><option value="premium" selected>Premium</option></select></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="form-group"><label>Months Valid</label>
+              <select name="months"><option value="3">3 months</option><option value="6">6 months</option><option value="12" selected>12 months</option><option value="24">24 months</option></select></div>
+            <div class="form-group"><label>How Many Codes</label>
+              <input type="number" name="count" value="1" min="1" max="20"></div>
+          </div>
+          <div class="form-group"><label>Notes (for yourself)</label>
+            <input type="text" name="notes" placeholder="e.g. School name, invoice #"></div>
+          <div class="form-group">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+              <input type="checkbox" name="fee_waiver" style="width:auto;margin:0">
+              This code grants a fee waiver (free access)
+            </label>
+          </div>
+          <button type="submit" class="btn btn-accent" style="width:100%;padding:10px;font-size:.88rem">
+            ⚡ Generate Code
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Recent codes -->
+    <div class="card">
+      <div class="card-header"><h3>🔑 Recent Access Codes</h3></div>
+      <div style="overflow:auto;max-height:280px">
+        <table>
+          <thead><tr><th>Code</th><th>Plan</th><th>Months</th><th>Status</th></tr></thead>
+          <tbody>
+          {% for c in codes %}
+          <tr>
+            <td><span class="code-box" style="font-size:.78rem;padding:3px 8px">{{ c.code }}</span></td>
+            <td>{{ c.plan }}</td>
+            <td>{{ c.months }}m{% if c.fee_waiver %} 🎁{% endif %}</td>
+            <td>{% if c.used %}<span class="badge badge-gray">Used{% if c.used_by_school %}: {{ c.used_by_school[:15] }}{% endif %}</span>
+                {% else %}<span class="badge badge-green">Available</span>{% endif %}</td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- All Schools -->
+  <div class="card">
+    <div class="card-header">
+      <h3>🏫 All Schools ({{ schools|length }})</h3>
+      <input type="text" id="school-search" placeholder="🔍 Search..."
+             style="width:200px;padding:5px 9px;font-size:.8rem"
+             oninput="filterSchools()">
+    </div>
+    <div style="overflow-x:auto">
+      <table id="school-table">
+        <thead><tr>
+          <th>School</th><th>Province</th><th>Email</th>
+          <th>Plan</th><th>Status</th><th>Expires</th>
+          <th>Teachers</th><th>Scans Today</th><th>Actions</th>
+        </tr></thead>
+        <tbody>
+        {% for s in schools %}
+        <tr>
+          <td><strong>{{ s.name }}</strong><br>
+            {% if s.principal %}<span style="font-size:.72rem;color:#94a3b8">{{ s.principal }}</span>{% endif %}
+          </td>
+          <td style="font-size:.78rem">{{ s.province or '—' }}</td>
+          <td style="font-size:.75rem">{{ s.email }}</td>
+          <td><span class="badge {% if s.plan=='premium' %}badge-blue{% else %}badge-gray{% endif %}">
+            {{ s.plan }}{% if s.fee_waiver==1 %} 🎁{% endif %}
+          </span></td>
+          <td>
+            {% if s.status=='active' %}<span class="badge badge-green">Active</span>
+            {% elif s.status=='trial' %}<span class="badge badge-yellow">Trial</span>
+            {% elif s.fee_waiver==2 %}<span class="badge badge-yellow">⏳ Waiver Pending</span>
+            {% else %}<span class="badge badge-red">{{ s.status }}</span>{% endif %}
+          </td>
+          <td style="font-size:.78rem">{{ s.plan_expires or s.trial_ends or '—' }}</td>
+          <td style="text-align:center">{{ s.teacher_count }}</td>
+          <td style="text-align:center">{{ s.scans_today }}</td>
+          <td>
+            <div style="display:flex;gap:4px;flex-wrap:wrap">
+              {% if s.fee_waiver==2 %}
+              <form method="POST" action="{{ url_for('super_school_action', sid=s.id) }}" style="display:inline">
+                <input type="hidden" name="action" value="approve_waiver">
+                <button type="submit" class="btn btn-green" style="padding:3px 8px;font-size:.72rem">✅ Approve Waiver</button>
+              </form>
+              <form method="POST" action="{{ url_for('super_school_action', sid=s.id) }}" style="display:inline">
+                <input type="hidden" name="action" value="deny_waiver">
+                <button type="submit" class="btn btn-gray" style="padding:3px 8px;font-size:.72rem">✗ Deny</button>
+              </form>
+              {% elif s.status != 'active' %}
+              <form method="POST" action="{{ url_for('super_school_action', sid=s.id) }}" style="display:inline">
+                <input type="hidden" name="action" value="activate">
+                <button type="submit" class="btn btn-green" style="padding:3px 8px;font-size:.72rem">Activate</button>
+              </form>
+              {% else %}
+              <form method="POST" action="{{ url_for('super_school_action', sid=s.id) }}" style="display:inline">
+                <input type="hidden" name="action" value="suspend">
+                <button type="submit" class="btn btn-gray" style="padding:3px 8px;font-size:.72rem">Suspend</button>
+              </form>
+              {% endif %}
+              <form method="POST" action="{{ url_for('super_school_action', sid=s.id) }}" style="display:inline"
+                    onsubmit="return confirm('Delete {{ s.name }}? This cannot be undone.')">
+                <input type="hidden" name="action" value="delete">
+                <button type="submit" class="btn btn-red" style="padding:3px 8px;font-size:.72rem">Del</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="9" style="text-align:center;color:#64748b;padding:30px">No schools registered yet.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+function filterSchools(){
+  const q=document.getElementById('school-search').value.toLowerCase();
+  document.querySelectorAll('#school-table tbody tr').forEach(r=>{
+    r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';
+  });
+}
+</script>
+</body>
+</html>

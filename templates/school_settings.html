@@ -1,0 +1,44 @@
+{% extends "base.html" %}{% block title %}Settings{% endblock %}{% block page_title %}⚙️ School Settings{% endblock %}
+{% block content %}
+<div style="max-width:600px">
+{% with messages=get_flashed_messages(with_categories=true) %}{% for cat,msg in messages %}<div class="flash flash-{{ cat }}">{{ msg }}</div>{% endfor %}{% endwith %}
+
+<!-- Subscription status -->
+<div class="card" style="border-color:{% if school.status=='active' %}#86efac{% else %}#fde68a{% endif %}">
+  <div class="card-body" style="padding:14px 18px">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <strong>Plan:</strong> {{ school.plan|title }}
+        &nbsp;·&nbsp;
+        <strong>Status:</strong>
+        {% if school.status=='active' %}<span style="color:#16a34a">✅ Active</span>
+        {% elif school.status=='trial' %}<span style="color:#f59e0b">⏳ Trial (expires {{ school.trial_ends }})</span>
+        {% else %}<span style="color:#ef4444">{{ school.status }}</span>{% endif %}
+        {% if school.fee_waiver==1 %}&nbsp;🎁 Fee Waiver Active{% endif %}
+      </div>
+      <a href="{{ url_for('activate') }}" class="btn-sm btn-primary">🔑 Activate Code</a>
+    </div>
+  </div>
+</div>
+
+<div class="card"><div class="card-header"><h3>🏫 School Profile</h3></div>
+<div class="card-body">
+<form method="POST">
+<div class="form-grid-2">
+  <div class="form-group"><label>School Name *</label><input type="text" name="school_name" value="{{ school.name }}" required></div>
+  <div class="form-group"><label>Principal</label><input type="text" name="principal" value="{{ school.principal or '' }}"></div>
+</div>
+<div class="form-group"><label>Address</label><input type="text" name="address" value="{{ school.address or '' }}"></div>
+<div class="form-grid-2">
+  <div class="form-group"><label>Province</label><input type="text" name="province" value="{{ school.province or '' }}"></div>
+  <div class="form-group"><label>Phone</label><input type="text" name="phone" value="{{ school.phone or '' }}"></div>
+</div>
+<div class="form-group"><label>Logo URL (optional)</label><input type="url" name="logo_url" value="{{ school.logo_url or '' }}" placeholder="https://..."></div>
+<div class="form-group">
+  <label>Server URL (set this for QR codes to work)</label>
+  <input type="url" name="server_url" value="{{ server_url }}" placeholder="https://your-app.onrender.com">
+  <p style="font-size:.74rem;color:#94a3b8;margin-top:4px">Saving this regenerates all QR codes.</p>
+</div>
+<button type="submit" class="btn-sm btn-primary" style="padding:10px 24px">💾 Save Settings</button>
+</form>
+</div></div></div>{% endblock %}

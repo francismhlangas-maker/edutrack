@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign In — EduTrack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--ink:#0D1B2A;--teal:#00C2A8;--border:#E4E9F2;--text-2:#3D5166;--text-3:#7A92A8}
+body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:#F4F6FB;
+  min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.wrap{display:grid;grid-template-columns:1fr 1fr;max-width:880px;width:100%;
+  background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(13,27,42,.12);
+  border:1px solid var(--border)}
+.left{background:var(--ink);padding:52px 44px;display:flex;flex-direction:column;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:40px}
+.brand-icon{width:36px;height:36px;background:rgba(0,194,168,.15);border-radius:9px;
+  display:flex;align-items:center;justify-content:center}
+.brand-icon svg{width:18px;height:18px;color:var(--teal)}
+.brand-name{font-size:1.05rem;font-weight:800;color:#fff}
+.left h2{font-size:1.65rem;font-weight:800;color:#fff;letter-spacing:-.03em;line-height:1.25;margin-bottom:16px}
+.left h2 em{font-style:normal;color:var(--teal)}
+.left p{font-size:.84rem;color:rgba(255,255,255,.45);line-height:1.7}
+.features{margin-top:36px;display:flex;flex-direction:column;gap:12px}
+.feat-item{display:flex;align-items:center;gap:10px;font-size:.8rem;color:rgba(255,255,255,.55)}
+.feat-item svg{width:14px;height:14px;color:var(--teal);flex-shrink:0}
+.left-footer{font-size:.72rem;color:rgba(255,255,255,.2);margin-top:auto;padding-top:32px}
+
+.right{padding:52px 44px;display:flex;flex-direction:column;justify-content:center}
+.right h3{font-size:1.3rem;font-weight:800;color:var(--ink);letter-spacing:-.02em;margin-bottom:6px}
+.right .sub{font-size:.82rem;color:var(--text-3);margin-bottom:30px}
+.flash{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:9px;
+  margin-bottom:16px;font-size:.8rem;font-weight:500;
+  background:#FFF5F5;border:1px solid #FECACA;color:#991B1B}
+.flash svg{width:14px;height:14px;flex-shrink:0}
+.fg{margin-bottom:16px}
+label{display:block;font-size:.74rem;font-weight:700;color:var(--text-2);
+  letter-spacing:.02em;margin-bottom:5px}
+.input-wrap{position:relative}
+.input-wrap svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);
+  width:15px;height:15px;color:var(--text-3)}
+input{width:100%;padding:10px 12px 10px 36px;border:1.5px solid var(--border);
+  border-radius:9px;font-size:.85rem;font-family:inherit;outline:none;
+  color:var(--ink);background:#fff;transition:border-color .15s,box-shadow .15s}
+input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,194,168,.1)}
+.btn-sign{width:100%;padding:12px;background:var(--ink);color:#fff;border:none;
+  border-radius:10px;font-size:.88rem;font-weight:700;cursor:pointer;
+  font-family:inherit;transition:background .15s;margin-top:6px;
+  display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-sign:hover{background:#1B2D42}
+.btn-sign svg{width:15px;height:15px}
+.links{display:flex;justify-content:space-between;margin-top:20px;font-size:.76rem}
+.links a{color:var(--text-3);transition:color .15s}
+.links a:hover{color:var(--ink)}
+@media(max-width:640px){.wrap{grid-template-columns:1fr}.left{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="left">
+    <div>
+      <div class="brand">
+        <div class="brand-icon"><i data-lucide="graduation-cap"></i></div>
+        <div class="brand-name">EduTrack</div>
+      </div>
+      <h2>Smart attendance<br>for <em>South African</em><br>schools</h2>
+      <p>Track when educators arrive, how long they teach, and when they leave — automatically with QR codes.</p>
+      <div class="features">
+        <div class="feat-item"><i data-lucide="scan-line"></i> Scan in & scan out tracking</div>
+        <div class="feat-item"><i data-lucide="shuffle"></i> Split class support</div>
+        <div class="feat-item"><i data-lucide="alert-triangle"></i> Automatic late detection</div>
+        <div class="feat-item"><i data-lucide="file-spreadsheet"></i> CSV export for HR & payroll</div>
+      </div>
+    </div>
+    <div class="left-footer">© {{ now().year }} EduTrack · Smart School Attendance</div>
+  </div>
+  <div class="right">
+    <h3>Welcome back</h3>
+    <p class="sub">Sign in to your school dashboard</p>
+    {% with messages=get_flashed_messages(with_categories=true) %}
+      {% for cat,msg in messages %}
+      <div class="flash"><i data-lucide="alert-circle"></i>{{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+    <form method="POST">
+      <div class="fg">
+        <label>Username</label>
+        <div class="input-wrap">
+          <i data-lucide="user"></i>
+          <input type="text" name="username" required autofocus placeholder="Your username">
+        </div>
+      </div>
+      <div class="fg">
+        <label>Password</label>
+        <div class="input-wrap">
+          <i data-lucide="lock"></i>
+          <input type="password" name="password" required placeholder="••••••••">
+        </div>
+      </div>
+      <button type="submit" class="btn-sign">Sign In <i data-lucide="arrow-right"></i></button>
+    </form>
+    <div class="links">
+      <a href="{{ url_for('landing') }}">← Back to home</a>
+      <a href="{{ url_for('register') }}">Register school</a>
+    </div>
+  </div>
+</div>
+<script>lucide.createIcons()</script>
+</body>
+</html>

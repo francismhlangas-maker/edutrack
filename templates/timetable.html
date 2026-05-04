@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+{% block title %}Manage Timetable{% endblock %}
+{% block page_title %}📅 Manage Timetable Slots{% endblock %}
+{% block topbar_actions %}
+  <a href="{{ url_for('check_clashes') }}" class="btn-sm btn-warn">
+    <i class="fas fa-exclamation-triangle"></i> Check Clashes
+  </a>
+  <a href="{{ url_for('timetable_view') }}" class="btn-sm btn-outline">
+    <i class="fas fa-table"></i> Grid View
+  </a>
+  <button class="btn-sm btn-primary" onclick="openModal('add-modal')">
+    <i class="fas fa-plus"></i> Add Slot
+  </button>
+{% endblock %}
+
+{% block content %}
+
+<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:9px;
+     padding:12px 16px;margin-bottom:16px;font-size:.83rem;color:#1e40af;line-height:1.7">
+  <strong>📌 Split classes</strong> — When a class splits into groups during a period
+  (Language choices, Science/Commerce subject choices, etc.), tick
+  <em>"This is a split class"</em> in the full form and fill in the Split Group name.
+  The system will allow multiple teachers in different rooms at the same time
+  for the same class without flagging a clash.
+</div>
+
+<!-- Quick add -->
+<div class="card">
+  <div class="card-header">
+    <h3>➕ Quick Add (no split)</h3>
+    <span style="font-size:.75rem;color:var(--muted)">
+      For split classes:
+      <button class="btn-sm btn-primary" onclick="openModal('add-modal')"
+              style="padding:3px 10px;font-size:.75rem">Open Full Form</button>
+    </span>
+  </div>
+  <div class="card-body">
+    <form method="POST" action="{{ url_for('add_slot') }}">
+      <div style="display:grid;grid-template-columns:repeat(6,1fr) auto;gap:10px;align-items:end">
+        <div class="form-group" style="margin:0">
+          <label>Day</label>
+          <select name="day_of_week" required>
+            {% for d in days %}<option value="{{ d }}">{{ d }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Period</label>
+          <select name="period_id" required>
+            {% for p in periods %}{% if not p.is_break %}
+            <option value="{{ p.id }}">{{ p.name }} ({{ p.start_time }})</option>
+            {% endif %}{% endfor %}
+          </select>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Teacher</label>
+          <select name="teacher_id" required>
+            {% for t in teachers %}
+            <option value="{{ t.id }}">{{ t.surname }}, {{ t.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Room</label>
+          <select name="room_id" required>
+            {% for r in rooms %}
+            <option value="{{ r.id }}">{{ r.code }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Class</label>
+          <input type="text" name="class_code" placeholder="e.g. 10A"
+                 oninput="this.value=this.value.toUpperCase()">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Subject</label>
+          <input type="text" name="subject" required placeholder="e.g. Mathematics">
+        </div>
+        <div style="margin-bottom:12px">
+          <button type="submit" class="btn-sm btn-success" style="width:100%;padding:9px">
+            <i class="fas fa-plus"></i> Add
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Day filter -->
+<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+  <button class="btn-sm btn-primary" onclick="filterDay('all')">All</button>
+  {% for d in days %}
+  <button class="btn-sm btn-outline" onclick="filterDay('{{ d }}')">{{ d }}</button>
+  {% endfor %}
+  <button class="btn-sm" style="background:#f3e8ff;color:#7c3aed;border:none"
+          onclick="filterDay('split')">🔀 Splits Only</button>
+</div>
+
+<!-- Slots table -->
+<div class="card">
+  <div class="card-header">
+    <h3>All Slots ({{ slots|length }})</h3>
+    <input type="text" id="slot-search" placeholder="🔍 Search..."
+           style="width:180px;padding:5px 9px;font-size:.8rem"
+           oninput="searchSlots()">
+  </div>
+  <div style="overflow-x:auto">
+    <table id="slot-table">
+      <thead><tr>
+        <th>Day</th><th>Period</th><th>Time</th><th>Class</th>
+        <th>Teacher</th><th>Room</th><th>Subject</th><th>Split</th><th></th>
+      </tr></thead>
+      <tbody>
+      {% for s in slots %}
+      <tr data-day="{{ s.day_of_week }}" data-split="{{ '1' if s.is_split else '0' }}"
+          style="{% if s.is_split %}background:#faf5ff{% endif %}">
+        <td><span class="badge badge-info">{{ s.day_of_week }}</span></td>
+        <td style="font-size:.82rem">{{ s.period_name }}</td>
+        <td style="font-family:monospace;font-size:.75rem">{{ s.start_time }}–{{ s.end_time }}</td>
+        <td>{% if s.class_code %}<span class="badge badge-gray">{{ s.class_code }}</span>{% else %}—{% endif %}</td>
+        <td><strong style="font-size:.82rem">{{ s.teacher_name }}</strong></td>
+        <td><span class="badge badge-info">{{ s.room_code }}</span></td>
+        <td style="font-size:.82rem">{{ s.subject }}</td>
+        <td>
+          {% if s.is_split %}
+          <span class="badge" style="background:#f3e8ff;color:#7c3aed">🔀 {{ s.split_group or 'Split' }}</span>
+          {% if s.split_label %}<br><span style="font-size:.68rem;color:#94a3b8">{{ s.split_label }}</span>{% endif %}
+          {% else %}<span style="color:#e2e8f0">—</span>{% endif %}
+        </td>
+        <td>
+          <form method="POST" action="{{ url_for('delete_slot', sid_=s.id) }}"
+                onsubmit="return confirm('Remove this slot?')">
+            <button type="submit" class="btn-sm btn-danger" style="padding:3px 9px;font-size:.75rem">
+              <i class="fas fa-trash"></i>
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+      {% if not slots %}
+      <tr><td colspan="9" style="text-align:center;color:#94a3b8;padding:32px">
+        No slots yet. Add one above.
+      </td></tr>
+      {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Full Add Modal -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal" style="width:600px;max-width:98%">
+    <button class="modal-close" onclick="closeModal('add-modal')">✕</button>
+    <h3>➕ Add Timetable Slot</h3>
+    <form method="POST" action="{{ url_for('add_slot') }}">
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label>Day *</label>
+          <select name="day_of_week" required>
+            {% for d in days %}<option value="{{ d }}">{{ d }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Period *</label>
+          <select name="period_id" required>
+            {% for p in periods %}{% if not p.is_break %}
+            <option value="{{ p.id }}">{{ p.name }} — {{ p.start_time }}–{{ p.end_time }}</option>
+            {% endif %}{% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label>Teacher *</label>
+          <select name="teacher_id" required>
+            {% for t in teachers %}
+            <option value="{{ t.id }}">{{ t.surname }}, {{ t.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Room *</label>
+          <select name="room_id" required>
+            {% for r in rooms %}
+            <option value="{{ r.id }}">{{ r.code }} — {{ r.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label>Class Code (e.g. 10A)</label>
+          <input type="text" name="class_code" placeholder="10A"
+                 oninput="this.value=this.value.toUpperCase()">
+        </div>
+        <div class="form-group">
+          <label>Subject *</label>
+          <input type="text" name="subject" required placeholder="e.g. IsiZulu FAL">
+        </div>
+      </div>
+
+      <!-- Split toggle -->
+      <div style="background:#faf5ff;border:1px solid #e9d5ff;border-radius:9px;padding:14px 16px;margin-bottom:14px">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;
+               font-size:.88rem;font-weight:700;color:#7c3aed;margin-bottom:0">
+          <input type="checkbox" name="is_split" id="split-toggle"
+                 style="width:auto;margin:0" onchange="toggleSplitFields()">
+          🔀 This is a split class (Language groups, subject choices, etc.)
+        </label>
+        <p style="font-size:.76rem;color:#94a3b8;margin-top:5px;margin-left:24px">
+          Allows multiple teachers in different rooms at the same time for the same class.
+        </p>
+
+        <div id="split-fields" style="display:none;margin-top:12px;border-top:1px solid #e9d5ff;padding-top:12px">
+          <div class="form-grid-2">
+            <div class="form-group" style="margin-bottom:8px">
+              <label>Split Group Name *</label>
+              <input type="text" name="split_group" id="split_group"
+                     placeholder="e.g. IsiZulu Group / Economics / Language A">
+              <p style="font-size:.71rem;color:#94a3b8;margin-top:3px">Unique name for this student group</p>
+            </div>
+            <div class="form-group" style="margin-bottom:8px">
+              <label>Split Type</label>
+              <input type="text" name="split_label" list="split-suggestions"
+                     placeholder="e.g. Language Choice">
+              <datalist id="split-suggestions">
+                <option value="Language Choice">
+                <option value="Science Choice">
+                <option value="Commerce Choice">
+                <option value="Humanities Choice">
+                <option value="Technology Choice">
+                <option value="Tourism/CAT Choice">
+                <option value="Business/Geography">
+                <option value="Economics/Life Sciences">
+              </datalist>
+              <p style="font-size:.71rem;color:#94a3b8;margin-top:3px">Groups related splits together</p>
+            </div>
+          </div>
+          <div style="background:#f5f3ff;border-radius:7px;padding:10px 12px;font-size:.75rem;color:#6d28d9;line-height:1.8">
+            <strong>Examples:</strong><br>
+            Language split → Group: <em>IsiZulu</em> / <em>Sesotho</em> / <em>Afrikaans</em> — Type: <em>Language Choice</em><br>
+            Science choice → Group: <em>Economics</em> / <em>Life Sciences</em> — Type: <em>Science Choice</em><br>
+            Commerce → Group: <em>Business Studies</em> / <em>Geography</em> — Type: <em>Commerce Choice</em><br>
+            Tech → Group: <em>Tourism</em> / <em>CAT</em> — Type: <em>Tourism/CAT Choice</em>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-sm btn-primary" style="width:100%;padding:11px;font-size:.92rem">
+        <i class="fas fa-save"></i> Save Slot
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+function toggleSplitFields(){
+  const on = document.getElementById('split-toggle').checked;
+  document.getElementById('split-fields').style.display = on ? 'block' : 'none';
+  document.getElementById('split_group').required = on;
+}
+function filterDay(day){
+  document.querySelectorAll('#slot-table tbody tr').forEach(r=>{
+    if(day==='all') r.style.display='';
+    else if(day==='split') r.style.display = r.dataset.split==='1' ? '' : 'none';
+    else r.style.display = r.dataset.day===day ? '' : 'none';
+  });
+}
+function searchSlots(){
+  const q=document.getElementById('slot-search').value.toLowerCase();
+  document.querySelectorAll('#slot-table tbody tr').forEach(r=>{
+    r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';
+  });
+}
+</script>
+{% endblock %}

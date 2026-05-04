@@ -1,0 +1,14 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fee Waiver – EduTrack</title>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',system-ui,sans-serif;background:linear-gradient(135deg,#15803d,#16a34a);min-height:100vh;padding:30px 20px;display:flex;align-items:flex-start;justify-content:center}.card{background:#fff;border-radius:16px;padding:36px 32px;width:100%;max-width:500px;box-shadow:0 20px 60px rgba(0,0,0,.2)}.logo{text-align:center;margin-bottom:22px}.logo h1{font-size:1.4rem;font-weight:800;color:#1a3c5e}.logo h1 span{color:#e8a020}label{display:block;font-size:.82rem;font-weight:600;color:#64748b;margin-bottom:4px}.fg{margin-bottom:14px}input,textarea{width:100%;padding:9px 11px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:.86rem;outline:none}input:focus,textarea:focus{border-color:#16a34a}.btn{width:100%;padding:12px;background:linear-gradient(135deg,#15803d,#16a34a);color:#fff;border:none;border-radius:9px;font-size:.9rem;font-weight:700;cursor:pointer;margin-top:6px}.flash-s{padding:10px;border-radius:7px;font-size:.82rem;margin-bottom:14px;background:#dcfce7;border:1px solid #86efac;color:#15803d}.note{text-align:center;margin-top:16px;font-size:.78rem;color:#94a3b8}</style></head>
+<body><div class="card">
+<div class="logo"><h1>Edu<span>Track</span></h1><p>Fee Waiver Application</p></div>
+{% with messages=get_flashed_messages(with_categories=true) %}{% for cat,msg in messages %}<div class="flash-s">{{ msg }}</div>{% endfor %}{% endwith %}
+<p style="font-size:.84rem;color:#374151;margin-bottom:20px;line-height:1.65">EduTrack believes every school deserves good tools, regardless of budget. If your school is under-resourced, apply for a fee waiver below. We review all applications within 2 business days.</p>
+<form method="POST">
+<div class="fg"><label>Registered School Email *</label><input type="email" name="email" required placeholder="admin@school.co.za"></div>
+<div class="fg"><label>Motivation *</label><textarea name="reason" required rows="5" placeholder="Please briefly describe your school's situation and why a fee waiver would make a difference..."></textarea></div>
+<button type="submit" class="btn">Submit Application →</button>
+</form>
+<div class="note"><a href="{{ url_for('landing') }}" style="color:#64748b">← Back to home</a></div>
+</div></body></html>

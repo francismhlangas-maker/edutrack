@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>{{ room.code }} – Check In/Out</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--primary:#1a3c5e;--primary-l:#2563a8;--accent:#e8a020;
+  --success:#16a34a;--warn:#f59e0b;--danger:#ef4444}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f4f8;
+  min-height:100vh;padding:12px;display:flex;flex-direction:column;align-items:center}
+
+/* Header */
+.header{background:linear-gradient(135deg,var(--primary),var(--primary-l));
+  color:#fff;border-radius:14px;padding:18px 20px;width:100%;max-width:440px;
+  margin-bottom:12px;text-align:center}
+.school{font-size:.72rem;opacity:.65;margin-bottom:4px}
+.room-code{font-size:2rem;font-weight:800;letter-spacing:.05em}
+.room-name{font-size:.8rem;opacity:.8;margin-top:2px}
+
+/* Period bar */
+.period-bar{background:#fff;border-radius:10px;padding:10px 16px;
+  width:100%;max-width:440px;margin-bottom:12px;
+  display:flex;justify-content:space-between;align-items:center;
+  border:1px solid #e2e8f0}
+.period-name{font-weight:700;color:var(--primary);font-size:.88rem}
+.period-time{font-size:.78rem;color:#64748b}
+.live-clock{font-size:1.1rem;font-weight:700;color:var(--primary-l);
+  font-variant-numeric:tabular-nums;letter-spacing:.05em}
+
+/* Scheduled teacher hint */
+.sched-hint{width:100%;max-width:440px;margin-bottom:12px;padding:9px 14px;
+  border-radius:9px;background:#fffbeb;border:1px solid #fde68a;
+  font-size:.8rem;color:#92400e;line-height:1.4}
+
+/* Card */
+.card{background:#fff;border-radius:14px;padding:20px;
+  width:100%;max-width:440px;border:1px solid #e2e8f0;
+  box-shadow:0 3px 14px rgba(0,0,0,.07);margin-bottom:12px}
+.card h3{font-size:.95rem;font-weight:700;color:var(--primary);margin-bottom:14px}
+
+/* Teacher select */
+select{width:100%;padding:13px 14px;border:2px solid #e2e8f0;
+  border-radius:10px;font-size:1rem;outline:none;background:#fff;
+  color:#1a202c;appearance:none;cursor:pointer;margin-bottom:12px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2364748b' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center}
+select:focus{border-color:var(--primary-l)}
+
+/* Action buttons */
+.action-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{width:100%;padding:15px 10px;border:none;border-radius:12px;
+  font-size:1rem;font-weight:700;cursor:pointer;display:flex;
+  align-items:center;justify-content:center;gap:8px;
+  transition:all .15s;letter-spacing:.01em}
+.btn:active{transform:scale(.96)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn-in{background:linear-gradient(135deg,#16a34a,#15803d);color:#fff}
+.btn-out{background:linear-gradient(135deg,#e8a020,#b45309);color:#fff}
+.btn-in:disabled{background:#d1d5db}
+.btn-out:disabled{background:#d1d5db}
+
+/* Teacher status indicators */
+.status-row{display:flex;align-items:center;gap:6px;font-size:.78rem;
+  padding:6px 0;border-bottom:1px solid #f1f5f9}
+.status-row:last-child{border-bottom:none}
+.dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.dot-none{background:#d1d5db}
+.dot-in{background:var(--success)}
+.dot-done{background:var(--primary-l)}
+
+/* Result overlay */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);
+  z-index:50;align-items:center;justify-content:center;padding:20px;
+  backdrop-filter:blur(2px)}
+.overlay.show{display:flex}
+.result-card{background:#fff;border-radius:18px;padding:32px 24px;
+  max-width:360px;width:100%;text-align:center;
+  animation:pop .3s cubic-bezier(.175,.885,.32,1.275) both}
+@keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+.res-icon{font-size:4rem;margin-bottom:14px;line-height:1}
+.res-title{font-size:1.35rem;font-weight:800;margin-bottom:8px;color:#1a202c}
+.res-msg{font-size:.88rem;color:#64748b;line-height:1.55;margin-bottom:16px}
+.res-detail{background:#f8fafc;border-radius:10px;padding:12px 14px;
+  margin-bottom:18px;font-size:.8rem;color:#374151;line-height:1.7;text-align:left}
+.res-detail b{color:var(--primary)}
+.btn-done{width:100%;padding:14px;background:var(--primary);color:#fff;
+  border:none;border-radius:10px;font-size:.95rem;font-weight:700;cursor:pointer}
+.btn-done:active{background:var(--primary-l)}
+
+/* Period ended notice */
+.notice{background:#f0fdf4;border:1px solid #86efac;border-radius:9px;
+  padding:9px 14px;font-size:.8rem;color:#15803d;width:100%;
+  max-width:440px;text-align:center;margin-bottom:12px}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="school">BASA Protea Glen Combined School</div>
+  <div class="room-code">{{ room.code }}</div>
+  <div class="room-name">{{ room.name }}{% if room.grade %} · Grade {{ room.grade }}{% endif %}</div>
+</div>
+
+<!-- Period bar -->
+{% if period %}
+<div class="period-bar">
+  <span class="period-name">{{ period.name }}</span>
+  <span class="period-time">{{ period.start_time }} – {{ period.end_time }}</span>
+  <span class="live-clock" id="clock">{{ now_str }}</span>
+</div>
+{% else %}
+<div class="period-bar" style="justify-content:center">
+  <span style="color:#94a3b8;font-size:.84rem">No active period right now</span>
+</div>
+{% endif %}
+
+<!-- Scheduled teacher hint -->
+{% if scheduled %}
+<div class="sched-hint">
+  📋 Scheduled: <strong>{{ scheduled.name }} {{ scheduled.surname }}</strong>
+  · {{ scheduled.subject }}
+</div>
+{% endif %}
+
+<!-- Check-in / Check-out form -->
+<div class="card">
+  <h3>👤 Select Your Name</h3>
+
+  <select id="teacher-select">
+    <option value="">— Tap to select your name —</option>
+    {% for t in teachers %}
+    <option value="{{ t.id }}"
+            data-state="{{ teacher_states.get(t.id, 'NONE') }}">
+      {{ t.surname }}, {{ t.name }}
+    </option>
+    {% endfor %}
+  </select>
+
+  <!-- Status line for selected teacher -->
+  <div id="status-line" style="font-size:.8rem;color:#64748b;margin-bottom:14px;
+       padding:7px 12px;background:#f8fafc;border-radius:8px;min-height:32px">
+    Select your name to see your status.
+  </div>
+
+  <div class="action-btns">
+    <button class="btn btn-in"  id="btn-in"  onclick="doAction('in')"  disabled>
+      📍 Check In
+    </button>
+    <button class="btn btn-out" id="btn-out" onclick="doAction('out')" disabled>
+      🚪 Check Out
+    </button>
+  </div>
+
+  <p style="font-size:.72rem;color:#94a3b8;text-align:center;margin-top:10px">
+    {{ today }}
+  </p>
+</div>
+
+<!-- Who's currently checked in -->
+{% if teacher_states.values()|list|select('equalto','SCANNED_IN')|list %}
+<div class="card">
+  <h3>🟢 Currently In Room</h3>
+  {% for t in teachers %}
+    {% if teacher_states.get(t.id) == 'SCANNED_IN' %}
+    <div class="status-row">
+      <div class="dot dot-in"></div>
+      <span><strong>{{ t.surname }}, {{ t.name }}</strong> — checked in, not yet out</span>
+    </div>
+    {% endif %}
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Result overlay -->
+<div class="overlay" id="overlay">
+  <div class="result-card">
+    <div class="res-icon"  id="res-icon">✅</div>
+    <div class="res-title" id="res-title"></div>
+    <div class="res-msg"   id="res-msg"></div>
+    <div class="res-detail" id="res-detail"></div>
+    <button class="btn-done" onclick="closeResult()">Done ✓</button>
+  </div>
+</div>
+
+<script>
+const TOKEN = "{{ token }}";
+const states = {{ teacher_states|tojson }};
+
+const selEl   = document.getElementById('teacher-select');
+const btnIn   = document.getElementById('btn-in');
+const btnOut  = document.getElementById('btn-out');
+const statEl  = document.getElementById('status-line');
+
+// Live clock
+function tick(){
+  const n=new Date();
+  const el=document.getElementById('clock');
+  if(el) el.textContent=n.toTimeString().slice(0,5);
+}
+setInterval(tick,1000); tick();
+
+// Update buttons when teacher selected
+selEl.addEventListener('change',()=>{
+  const tid = selEl.value;
+  const opt = selEl.selectedOptions[0];
+  if(!tid){
+    btnIn.disabled = btnOut.disabled = true;
+    statEl.innerHTML = 'Select your name to see your status.';
+    statEl.style.background='#f8fafc'; statEl.style.color='#64748b';
+    return;
+  }
+  const st = opt.dataset.state || states[tid] || 'NONE';
+  updateButtons(st);
+});
+
+function updateButtons(state){
+  if(state === 'NONE'){
+    btnIn.disabled  = false;
+    btnOut.disabled = true;
+    statEl.innerHTML = '✅ You have not checked in yet. Tap <b>Check In</b>.';
+    statEl.style.background='#f0fdf4'; statEl.style.color='#15803d';
+  } else if(state === 'SCANNED_IN'){
+    btnIn.disabled  = true;
+    btnOut.disabled = false;
+    statEl.innerHTML = '🟢 You are <b>checked in</b>. Tap <b>Check Out</b> when you leave.';
+    statEl.style.background='#fffbeb'; statEl.style.color='#92400e';
+  } else {
+    btnIn.disabled  = true;
+    btnOut.disabled = true;
+    statEl.innerHTML = '✅ You have <b>completed</b> this period. No further action needed.';
+    statEl.style.background='#dbeafe'; statEl.style.color='#1d4ed8';
+  }
+}
+
+async function doAction(action){
+  const tid = selEl.value;
+  if(!tid){ selEl.style.borderColor='#ef4444'; selEl.focus(); return; }
+  selEl.style.borderColor='';
+
+  btnIn.disabled = btnOut.disabled = true;
+  const activeBtn = action==='in' ? btnIn : btnOut;
+  const origText = activeBtn.innerHTML;
+  activeBtn.innerHTML = '⏳ Please wait…';
+
+  try{
+    const fd = new FormData();
+    fd.append('teacher_id', tid);
+    fd.append('action', action);
+    const res  = await fetch(`/scan/${TOKEN}/action`, {method:'POST', body:fd});
+    const data = await res.json();
+
+    if(data.success){
+      // Update local state
+      const opt = selEl.selectedOptions[0];
+      if(opt){
+        opt.dataset.state = action==='in' ? 'SCANNED_IN' : 'COMPLETED';
+        states[tid]       = opt.dataset.state;
+      }
+
+      // Icons
+      const icons = {
+        ON_TIME:'✅', EARLY:'⏰', LATE:'⚠️', UNSCHEDULED:'📋',
+        COMPLETED:'🎉', LEFT_EARLY:'⚠️'
+      };
+      document.getElementById('res-icon').textContent  = icons[data.status] || '✅';
+      document.getElementById('res-title').textContent = data.title;
+      document.getElementById('res-msg').textContent   = data.message;
+
+      // Detail panel
+      let detail = '';
+      if(action==='in'){
+        detail = `<b>Teacher:</b> ${data.teacher}<br>
+                  <b>Period:</b> ${data.period}<br>
+                  <b>Checked In:</b> ${data.time}`;
+      } else {
+        detail = `<b>Teacher:</b> ${data.teacher}<br>
+                  <b>Period:</b> ${data.period}<br>
+                  <b>In:</b> ${data.time_in} &nbsp;→&nbsp; <b>Out:</b> ${data.time_out}<br>
+                  <b>Time in room:</b> ${data.duration} minutes`;
+      }
+      document.getElementById('res-detail').innerHTML = detail;
+      document.getElementById('overlay').classList.add('show');
+    } else {
+      statEl.innerHTML = `⚠️ ${data.message}`;
+      statEl.style.background='#fee2e2'; statEl.style.color='#b91c1c';
+      // Restore button state
+      const st = states[tid] || 'NONE';
+      updateButtons(st);
+    }
+  } catch(e){
+    alert('Network error. Check your WiFi connection and try again.');
+    const st = states[tid] || 'NONE';
+    updateButtons(st);
+  }
+
+  activeBtn.innerHTML = origText;
+}
+
+function closeResult(){
+  document.getElementById('overlay').classList.remove('show');
+  // Refresh button state from updated states
+  const tid = selEl.value;
+  if(tid) updateButtons(states[tid] || 'NONE');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Periods{% endblock %}
+{% block page_title %}🕐 Bell Schedule / Periods{% endblock %}
+
+{% block content %}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+
+  <!-- Current periods -->
+  <div class="card">
+    <div class="card-header"><h3>Current Bell Schedule</h3></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Name</th><th>Start</th><th>End</th><th>Type</th><th></th></tr></thead>
+        <tbody>
+        {% for p in periods %}
+        <tr>
+          <td style="color:#94a3b8;font-size:.78rem">{{ loop.index }}</td>
+          <td><strong>{{ p.name }}</strong></td>
+          <td style="font-weight:600;font-family:monospace">{{ p.start_time }}</td>
+          <td style="font-family:monospace;color:#64748b">{{ p.end_time }}</td>
+          <td>
+            {% if p.is_break %}<span class="badge badge-warn">☕ Break</span>
+            {% else %}<span class="badge badge-success">📚 Class</span>{% endif %}
+          </td>
+          <td>
+            <form method="POST" action="{{ url_for('delete_period', pid=p.id) }}"
+                  onsubmit="return confirm('Delete {{ p.name }}?')">
+              <button type="submit" class="btn-sm btn-danger" style="padding:3px 9px">✕</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Add period + visual timeline -->
+  <div>
+    <div class="card">
+      <div class="card-header"><h3>➕ Add Period</h3></div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('add_period') }}">
+          <div class="form-group">
+            <label>Period Name *</label>
+            <input type="text" name="name" required placeholder="e.g. Period 9, Lunch">
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label>Start Time *</label>
+              <input type="time" name="start_time" required>
+            </div>
+            <div class="form-group">
+              <label>End Time *</label>
+              <input type="time" name="end_time" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+              <input type="checkbox" name="is_break" style="width:auto;margin:0">
+              This is a break / non-teaching period
+            </label>
+          </div>
+          <button type="submit" class="btn-sm btn-primary" style="width:100%;padding:10px">
+            <i data-lucide="plus"></i> Add Period
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Visual timeline -->
+    <div class="card">
+      <div class="card-header"><h3>⏱️ Day Timeline</h3></div>
+      <div class="card-body" style="padding:12px 16px">
+        {% for p in periods %}
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <div style="font-family:monospace;font-size:.75rem;color:#64748b;width:45px;
+               text-align:right;flex-shrink:0">{{ p.start_time }}</div>
+          <div style="flex:1;height:28px;border-radius:6px;display:flex;align-items:center;
+               padding:0 10px;font-size:.78rem;font-weight:600;
+               {% if p.is_break %}background:#fffbeb;color:#d97706;border:1px solid #fde68a
+               {% else %}background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd{% endif %}">
+            {{ p.name }}
+          </div>
+          <div style="font-family:monospace;font-size:.72rem;color:#94a3b8;width:45px;flex-shrink:0">
+            {{ p.end_time }}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

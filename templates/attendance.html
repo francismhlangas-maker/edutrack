@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+{% block title %}Attendance Reports{% endblock %}
+{% block page_title %}📋 Attendance Reports{% endblock %}
+{% block topbar_actions %}
+  <a href="{{ url_for('export_attendance', date_from=date_from, date_to=date_to) }}"
+     class="btn-sm btn-success"><i data-lucide="file-spreadsheet"></i> Export CSV</a>
+{% endblock %}
+
+{% block content %}
+<!-- Filters -->
+<div class="card">
+  <div class="card-body">
+    <form method="GET" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+      <div class="form-group" style="margin:0;flex:1;min-width:130px">
+        <label>Date From</label>
+        <input type="date" name="date_from" value="{{ date_from }}">
+      </div>
+      <div class="form-group" style="margin:0;flex:1;min-width:130px">
+        <label>Date To</label>
+        <input type="date" name="date_to" value="{{ date_to }}">
+      </div>
+      <div class="form-group" style="margin:0;flex:1;min-width:150px">
+        <label>Teacher</label>
+        <select name="teacher_id">
+          <option value="">All Teachers</option>
+          {% for t in teachers %}
+          <option value="{{ t.id }}" {% if t_filter==t.id|string %}selected{% endif %}>
+            {{ t.surname }}, {{ t.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group" style="margin:0;flex:1;min-width:130px">
+        <label>Arrival</label>
+        <select name="in_status">
+          <option value="">All</option>
+          <option value="ON_TIME"     {% if s_filter=='ON_TIME'     %}selected{% endif %}>✅ On Time</option>
+          <option value="LATE"        {% if s_filter=='LATE'        %}selected{% endif %}>⚠️ Late</option>
+          <option value="EARLY"       {% if s_filter=='EARLY'       %}selected{% endif %}>⏰ Early</option>
+          <option value="UNSCHEDULED" {% if s_filter=='UNSCHEDULED' %}selected{% endif %}>📋 Unscheduled</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin:0;flex:1;min-width:130px">
+        <label>Departure</label>
+        <select name="out_status">
+          <option value="">All</option>
+          <option value="COMPLETED"  {% if o_filter=='COMPLETED'  %}selected{% endif %}>✅ Completed</option>
+          <option value="LEFT_EARLY" {% if o_filter=='LEFT_EARLY' %}selected{% endif %}>🚪 Left Early</option>
+        </select>
+      </div>
+      <button type="submit" class="btn-sm btn-primary" style="padding:9px 20px;margin-bottom:14px">
+        <i data-lucide="filter"></i> Filter
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Summary KPIs -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-icon bg-blue"><i data-lucide="list"></i></div>
+    <div><div class="stat-val">{{ total }}</div><div class="stat-lbl">Total Records</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-green"><i data-lucide="check-circle-2"></i></div>
+    <div><div class="stat-val">{{ on_time }}</div><div class="stat-lbl">On Time Arrivals</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-orange"><i data-lucide="clock"></i></div>
+    <div><div class="stat-val">{{ late }}</div><div class="stat-lbl">Late Arrivals</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-red"><i data-lucide="door-open"></i></div>
+    <div><div class="stat-val">{{ left_early }}</div><div class="stat-lbl">Left Early</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-purple"><i data-lucide="timer"></i></div>
+    <div>
+      <div class="stat-val">{{ avg_dur|int }}<span style="font-size:1rem">m</span></div>
+      <div class="stat-lbl">Avg Duration</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-orange"><i data-lucide="log-out"></i></div>
+    <div>
+      <div class="stat-val" style="color:{% if no_out > 0 %}#f59e0b{% else %}#16a34a{% endif %}">{{ no_out }}</div>
+      <div class="stat-lbl">No Checkout</div>
+    </div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1.5fr;gap:18px">
+
+  <!-- Per-teacher summary -->
+  <div class="card">
+    <div class="card-header"><h3>👨‍🏫 Teacher Summary</h3></div>
+    <div style="overflow-x:auto">
+      <table style="font-size:.8rem">
+        <thead><tr>
+          <th>Teacher</th><th>✅</th><th>⚠️ Late</th>
+          <th>🚪 Early Out</th><th>Avg Duration</th><th>Punct. Rate</th>
+        </tr></thead>
+        <tbody>
+        {% for ts in teacher_stats %}
+        <tr>
+          <td><strong>{{ ts.teacher_name }}</strong></td>
+          <td style="color:#16a34a;font-weight:600">{{ ts.on_time }}</td>
+          <td>
+            {% if ts.late > 0 %}
+            <span style="color:#ef4444;font-weight:600">{{ ts.late }}</span>
+            {% if ts.total_late_mins %}
+            <span style="color:#94a3b8;font-size:.7rem"> (+{{ ts.total_late_mins }}m)</span>
+            {% endif %}
+            {% else %}
+            <span style="color:#16a34a">0</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if ts.left_early > 0 %}
+            <span style="color:#ef4444;font-weight:600">{{ ts.left_early }}</span>
+            {% else %}<span style="color:#16a34a">0</span>{% endif %}
+          </td>
+          <td>
+            {% if ts.avg_duration %}
+            <span style="font-weight:600">{{ ts.avg_duration|int }}m</span>
+            {% else %}—{% endif %}
+          </td>
+          <td>
+            {% if ts.total > 0 %}
+            {% set rate = ((ts.on_time / ts.total) * 100)|round(0)|int %}
+            <span class="badge {% if rate>=90 %}badge-success{% elif rate>=70 %}badge-warn{% else %}badge-danger{% endif %}">
+              {{ rate }}%
+            </span>
+            {% else %}—{% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:20px">No data</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Detailed records -->
+  <div class="card">
+    <div class="card-header">
+      <h3>📝 Records ({{ records|length }})</h3>
+      <input type="text" id="rec-q" placeholder="🔍 Search…" oninput="filterRecs()"
+             style="width:140px;padding:5px 9px;font-size:.8rem">
+    </div>
+    <div style="overflow-x:auto;max-height:440px;overflow-y:auto">
+      <table id="rec-table" style="font-size:.78rem">
+        <thead><tr>
+          <th>Date</th><th>Teacher</th><th>Room</th>
+          <th>Check In</th><th>Check Out</th><th>Duration</th>
+          <th>In</th><th>Out</th><th></th>
+        </tr></thead>
+        <tbody>
+        {% for r in records %}
+        <tr style="{% if r.out_status=='LEFT_EARLY' %}background:#fff5f5{% elif r.in_status=='LATE' %}background:#fffbeb{% endif %}">
+          <td style="white-space:nowrap;font-size:.72rem">
+            {{ r.date }}<br><span style="color:#94a3b8">{{ r.day_of_week }}</span>
+          </td>
+          <td><strong>{{ r.teacher_name }}</strong></td>
+          <td><span class="badge badge-info">{{ r.room_code }}</span></td>
+          <td>
+            <span style="font-weight:700">{{ r.scan_in_time }}</span>
+            {% if r.scheduled_start %}
+            <br><span style="color:#94a3b8;font-size:.7rem">sched {{ r.scheduled_start }}</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if r.scan_out_time %}
+            <span style="font-weight:700;color:{% if r.out_status=='LEFT_EARLY' %}#ef4444{% else %}#16a34a{% endif %}">
+              {{ r.scan_out_time }}</span>
+            {% if r.scheduled_end %}
+            <br><span style="color:#94a3b8;font-size:.7rem">sched {{ r.scheduled_end }}</span>
+            {% endif %}
+            {% else %}
+            <span style="color:#f59e0b;font-weight:600">⏳ No checkout</span>
+            <!-- Manual checkout form -->
+            <form method="POST" action="{{ url_for('manual_checkout', aid=r.id) }}"
+                  style="display:inline;margin-left:4px">
+              <input type="time" name="checkout_time" value="{{ now().strftime('%H:%M') }}"
+                     style="width:80px;padding:2px 4px;font-size:.72rem;display:inline">
+              <button type="submit" style="padding:2px 6px;font-size:.7rem;
+                background:#2563a8;color:#fff;border:none;border-radius:4px;cursor:pointer">
+                Set Out
+              </button>
+            </form>
+            {% endif %}
+          </td>
+          <td style="font-weight:600">
+            {% if r.duration_mins is not none %}
+              {{ r.duration_mins }}m
+              {% if r.period_length %}
+              / {{ r.period_length }}m
+              {% endif %}
+            {% else %}—{% endif %}
+          </td>
+          <td>
+            {% if r.in_status == 'ON_TIME'     %}<span class="badge badge-success">✅</span>
+            {% elif r.in_status == 'EARLY'     %}<span class="badge badge-info">⏰</span>
+            {% elif r.in_status == 'LATE'      %}<span class="badge badge-danger">+{{ r.minutes_late }}m</span>
+            {% else %}<span class="badge badge-gray">📋</span>{% endif %}
+          </td>
+          <td>
+            {% if r.out_status == 'COMPLETED'  %}<span class="badge badge-success">✅</span>
+            {% elif r.out_status == 'LEFT_EARLY'%}<span class="badge badge-danger">🚪 Early</span>
+            {% elif not r.scan_out_time         %}<span class="badge badge-warn">⏳</span>
+            {% else %}<span class="badge badge-gray">—</span>{% endif %}
+          </td>
+          <td>
+            <form method="POST" action="{{ url_for('delete_attendance', aid=r.id) }}"
+                  onsubmit="return confirm('Delete this record?')">
+              <button type="submit" class="btn-sm btn-danger"
+                      style="padding:3px 8px;font-size:.7rem">✕</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="9" style="text-align:center;color:#94a3b8;padding:32px">
+          No records found.
+        </td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Legend -->
+<div class="card" style="background:#f8fafc">
+  <div class="card-body" style="padding:14px 18px">
+    <strong style="font-size:.82rem;color:#374151">Status guide: </strong>
+    <span class="badge badge-success" style="margin-left:8px">✅ On Time / Completed</span>
+    <span class="badge badge-warn"    style="margin-left:6px">⚠️ Late arrival</span>
+    <span class="badge badge-danger"  style="margin-left:6px">🚪 Left early</span>
+    <span class="badge badge-warn"    style="margin-left:6px">⏳ Still in / no checkout</span>
+    <span class="badge badge-info"    style="margin-left:6px">⏰ Early arrival</span>
+    <span class="badge badge-gray"    style="margin-left:6px">📋 Unscheduled</span>
+  </div>
+</div>
+
+<script>
+function filterRecs(){
+  const q = document.getElementById('rec-q').value.toLowerCase();
+  document.querySelectorAll('#rec-table tbody tr').forEach(r=>{
+    r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+</script>
+{% endblock %}

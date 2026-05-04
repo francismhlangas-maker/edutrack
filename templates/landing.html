@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EduTrack — Smart School Attendance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--ink:#0D1B2A;--ink-mid:#1B2D42;--teal:#00C2A8;--teal-dim:#00A891;
+  --bg:#F4F6FB;--surface:#fff;--text-1:#0D1B2A;--text-2:#3D5166;--text-3:#7A92A8;--border:#E4E9F2}
+body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:var(--text-1);background:#fff}
+a{text-decoration:none;color:inherit}
+
+nav{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.9);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);padding:0 48px;height:62px;
+  display:flex;align-items:center;justify-content:space-between}
+.nav-logo{display:flex;align-items:center;gap:10px;font-size:1.05rem;font-weight:800;color:var(--ink)}
+.logo-icon{width:34px;height:34px;background:var(--ink);border-radius:9px;
+  display:flex;align-items:center;justify-content:center}
+.logo-icon svg{width:16px;height:16px;color:var(--teal)}
+.nav-links{display:flex;align-items:center;gap:4px}
+.nl{padding:6px 13px;border-radius:8px;font-size:.83rem;font-weight:500;
+  color:var(--text-2);transition:all .15s}
+.nl:hover{background:var(--bg);color:var(--text-1)}
+.nl-cta{background:var(--ink);color:#fff;padding:8px 18px;border-radius:9px;font-weight:700}
+.nl-cta:hover{background:var(--ink-mid)}
+
+.hero{background:var(--ink);padding:96px 48px 0;text-align:center;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 70% 50% at 50% -10%,rgba(0,194,168,.2),transparent 70%)}
+.pill{display:inline-flex;align-items:center;gap:6px;
+  background:rgba(0,194,168,.1);border:1px solid rgba(0,194,168,.2);color:var(--teal);
+  border-radius:99px;padding:5px 14px;font-size:.74rem;font-weight:700;
+  letter-spacing:.05em;text-transform:uppercase;margin-bottom:26px;position:relative;z-index:1}
+.pill svg{width:11px;height:11px}
+h1{font-size:3.6rem;font-weight:900;line-height:1.05;color:#fff;letter-spacing:-.05em;
+  max-width:820px;margin:0 auto 22px;position:relative;z-index:1}
+h1 em{font-style:normal;color:var(--teal)}
+.hero-sub{font-size:1rem;color:rgba(255,255,255,.55);max-width:540px;
+  margin:0 auto 38px;line-height:1.75;position:relative;z-index:1}
+.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;
+  position:relative;z-index:1;margin-bottom:60px}
+.btn-t{padding:13px 28px;border-radius:10px;font-size:.9rem;font-weight:800;
+  display:inline-flex;align-items:center;gap:8px;transition:all .15s}
+.btn-t svg{width:15px;height:15px}
+.btn-teal{background:var(--teal);color:var(--ink)}
+.btn-teal:hover{background:#00D4B8;transform:translateY(-1px)}
+.btn-ghost{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.75)}
+.btn-ghost:hover{background:rgba(255,255,255,.14)}
+
+.stats-row{background:var(--ink-mid);border-top:1px solid rgba(255,255,255,.07);
+  padding:22px 48px;display:flex;justify-content:center;gap:64px;flex-wrap:wrap}
+.sr{text-align:center}
+.sr-n{font-size:1.4rem;font-weight:900;color:#fff;letter-spacing:-.04em}
+.sr-l{font-size:.7rem;color:rgba(255,255,255,.35);margin-top:2px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+
+.wrap{max-width:1120px;margin:0 auto;padding:0 48px}
+.sec{padding:88px 0}
+.sec-tag{font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--teal);margin-bottom:10px}
+.sec-h{font-size:2.1rem;font-weight:900;letter-spacing:-.04em;color:var(--text-1);margin-bottom:10px}
+.sec-p{font-size:.92rem;color:var(--text-3);line-height:1.7;max-width:560px;margin-bottom:52px}
+
+.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;position:relative}
+.steps::before{content:'';position:absolute;top:22px;left:8%;right:8%;height:1px;background:var(--border);z-index:0}
+.step{text-align:center;padding:0 12px;position:relative;z-index:1}
+.sn{width:46px;height:46px;border-radius:50%;background:var(--surface);
+  border:2px solid var(--border);color:var(--text-3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.78rem;font-weight:800;margin:0 auto 16px}
+.step.go .sn{background:var(--ink);border-color:var(--ink);color:#fff}
+.step h3{font-size:.84rem;font-weight:700;color:var(--text-1);margin-bottom:5px}
+.step p{font-size:.74rem;color:var(--text-3);line-height:1.5}
+
+.feats-bg{background:var(--bg)}
+.feat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.feat{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:22px;transition:all .18s}
+.feat:hover{box-shadow:0 8px 28px rgba(13,27,42,.08);transform:translateY(-2px);border-color:var(--border)}
+.fi{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;
+  justify-content:center;margin-bottom:14px}
+.fi svg{width:18px;height:18px}
+.feat h3{font-size:.85rem;font-weight:700;color:var(--text-1);margin-bottom:6px}
+.feat p{font-size:.76rem;color:var(--text-3);line-height:1.6}
+
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;max-width:920px;margin:0 auto}
+.plan{background:var(--surface);border:1.5px solid var(--border);border-radius:16px;padding:28px}
+.plan.hot{border-color:var(--teal);box-shadow:0 0 0 4px rgba(0,194,168,.08)}
+.plan-badge{display:inline-block;background:var(--ink);color:#fff;
+  font-size:.66rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  padding:3px 10px;border-radius:99px;margin-bottom:14px}
+.hot .plan-badge{background:var(--teal);color:var(--ink)}
+.plan-n{font-size:.95rem;font-weight:800;color:var(--text-1);margin-bottom:4px}
+.plan-p{font-size:1.7rem;font-weight:900;color:var(--text-1);letter-spacing:-.04em;margin-bottom:4px}
+.plan-p span{font-size:.82rem;font-weight:400;color:var(--text-3)}
+.plan-d{font-size:.77rem;color:var(--text-3);margin-bottom:18px;line-height:1.5}
+.plan hr{border:none;border-top:1px solid var(--border);margin-bottom:16px}
+.plan ul{list-style:none;margin-bottom:22px}
+.plan li{font-size:.78rem;color:var(--text-2);padding:4px 0;display:flex;align-items:center;gap:7px}
+.plan li svg{width:13px;height:13px;color:var(--teal);flex-shrink:0}
+.plan-btn{display:block;width:100%;padding:11px;border-radius:9px;font-size:.82rem;
+  font-weight:700;text-align:center;border:none;cursor:pointer;font-family:inherit;transition:all .15s}
+.pb-dark{background:var(--ink);color:#fff}.pb-dark:hover{background:var(--ink-mid)}
+.pb-teal{background:var(--teal);color:var(--ink)}.pb-teal:hover{background:var(--teal-dim)}
+.pb-light{background:var(--bg);color:var(--text-2);border:1.5px solid var(--border)}
+.pb-light:hover{background:var(--border)}
+
+.waiver-bar{max-width:920px;margin:24px auto 0;
+  background:linear-gradient(135deg,#ECFDF5,#F0FDF4);
+  border:1px solid #A7F3D0;border-radius:14px;
+  padding:24px 28px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.waiver-bar h4{font-size:.92rem;font-weight:700;color:#065F46;margin-bottom:3px}
+.waiver-bar p{font-size:.78rem;color:#047857}
+.wb-btn{padding:10px 22px;background:#059669;color:#fff;border-radius:8px;
+  font-size:.82rem;font-weight:700;white-space:nowrap;transition:background .15s}
+.wb-btn:hover{background:#047857}
+
+footer{background:var(--ink);color:rgba(255,255,255,.3);padding:30px 48px;
+  display:flex;align-items:center;justify-content:space-between;font-size:.76rem}
+.footer-brand{font-size:.9rem;font-weight:800;color:#fff}
+.footer-links{display:flex;gap:18px}
+.footer-links a{color:rgba(255,255,255,.4);transition:color .15s}
+.footer-links a:hover{color:#fff}
+
+@media(max-width:900px){
+  .steps{grid-template-columns:1fr 1fr;gap:24px}.steps::before{display:none}
+  .feat-grid{grid-template-columns:1fr 1fr}
+  .plans{grid-template-columns:1fr}
+  h1{font-size:2.4rem}
+  nav,footer{padding:0 20px}
+  .hero{padding:70px 20px 0}
+  .wrap{padding:0 20px}
+}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo">
+    <div class="logo-icon"><i data-lucide="graduation-cap"></i></div>
+    EduTrack
+  </div>
+  <div class="nav-links">
+    <a href="#features" class="nl">Features</a>
+    <a href="#pricing" class="nl">Pricing</a>
+    <a href="{{ url_for('apply_waiver') }}" class="nl">Fee Waiver</a>
+    <a href="{{ url_for('school_login') }}" class="nl">Sign In</a>
+    <a href="{{ url_for('register') }}" class="nl nl-cta">Get Started →</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="pill"><i data-lucide="zap"></i> For South African Schools</div>
+  <h1>Know exactly who is <em>teaching</em><br>right now</h1>
+  <p class="hero-sub">QR codes on classroom notice boards. Teachers scan in when they arrive. Scan out when they leave. You see everything live.</p>
+  <div class="hero-btns">
+    <a href="{{ url_for('register') }}" class="btn-t btn-teal">Start Free Trial <i data-lucide="arrow-right"></i></a>
+    <a href="#how" class="btn-t btn-ghost"><i data-lucide="play-circle"></i> How it works</a>
+  </div>
+</section>
+<div class="stats-row">
+  <div class="sr"><div class="sr-n">30</div><div class="sr-l">Day Free Trial</div></div>
+  <div class="sr"><div class="sr-n">QR</div><div class="sr-l">No App Needed</div></div>
+  <div class="sr"><div class="sr-n">Live</div><div class="sr-l">Real-Time</div></div>
+  <div class="sr"><div class="sr-n">CSV</div><div class="sr-l">Export Ready</div></div>
+</div>
+
+<div id="how" class="wrap">
+  <div class="sec">
+    <div class="sec-tag">How it works</div>
+    <div class="sec-h">Set up in one afternoon</div>
+    <p class="sec-p">No IT team needed. No training sessions. Build the timetable, print the QR codes, done.</p>
+    <div class="steps">
+      <div class="step go"><div class="sn">1</div><h3>Register</h3><p>30-day free trial, no card needed</p></div>
+      <div class="step"><div class="sn">2</div><h3>Add Educators</h3><p>Import your staff and classrooms</p></div>
+      <div class="step"><div class="sn">3</div><h3>Build Timetable</h3><p>Assign teachers to periods and rooms</p></div>
+      <div class="step"><div class="sn">4</div><h3>Print QR Codes</h3><p>One per classroom, paste on notice board</p></div>
+      <div class="step"><div class="sn">5</div><h3>Go Live</h3><p>Teachers scan in and out with their phone</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="feats-bg" id="features">
+  <div class="wrap"><div class="sec">
+    <div class="sec-tag">Features</div>
+    <div class="sec-h">Everything a school manager needs</div>
+    <p class="sec-p">Built around how South African FET schools actually work — split classes, subject choices, multiple venues.</p>
+    <div class="feat-grid">
+      <div class="feat"><div class="fi" style="background:#F0FDFA"><i data-lucide="scan-line" style="color:#0D9488"></i></div><h3>Scan In & Scan Out</h3><p>Track actual time in the classroom. Flag educators who leave before the bell.</p></div>
+      <div class="feat"><div class="fi" style="background:#FFFBEB"><i data-lucide="timer-off" style="color:#D97706"></i></div><h3>Late Arrival Alerts</h3><p>Exact minutes late, configurable grace period. Automatic, no human input needed.</p></div>
+      <div class="feat"><div class="fi" style="background:#EFF6FF"><i data-lucide="shuffle" style="color:#3B82F6"></i></div><h3>Split Class Support</h3><p>Language groups, Economics/Life Sciences, Tourism/CAT — multiple venues, one period.</p></div>
+      <div class="feat"><div class="fi" style="background:#FAF5FF"><i data-lucide="table-2" style="color:#9333EA"></i></div><h3>Clash Detection</h3><p>Warns you before saving if a teacher or room is double-booked.</p></div>
+      <div class="feat"><div class="fi" style="background:#FFF1F2"><i data-lucide="file-spreadsheet" style="color:#F43F5E"></i></div><h3>CSV Reports</h3><p>Export full attendance data for payroll, HR, or SACE records.</p></div>
+      <div class="feat"><div class="fi" style="background:#F0FDFA"><i data-lucide="building-2" style="color:#0D9488"></i></div><h3>School Branding</h3><p>Your school name on the scan page. Familiar and professional for every educator.</p></div>
+      <div class="feat"><div class="fi" style="background:#FFFBEB"><i data-lucide="lock" style="color:#D97706"></i></div><h3>Data Privacy</h3><p>Each school's data is completely isolated. Nobody else can see your records.</p></div>
+      <div class="feat"><div class="fi" style="background:#F4F6FB"><i data-lucide="smartphone" style="color:#6B7280"></i></div><h3>Any Phone, No App</h3><p>Camera → scan → tap name. Done in 5 seconds. Works on every smartphone.</p></div>
+    </div>
+  </div></div>
+</div>
+
+<div id="pricing" class="wrap">
+  <div class="sec">
+    <div class="sec-tag">Pricing</div>
+    <div class="sec-h">Simple, honest pricing</div>
+    <p class="sec-p">Start free. Pay when you're ready. Activate instantly with an access code.</p>
+    <div class="plans">
+      <div class="plan"><div class="plan-badge">Free</div>
+        <div class="plan-n">30-Day Trial</div><div class="plan-p">R0 <span>/ month</span></div>
+        <div class="plan-d">Full access. No card. No commitment. See if EduTrack works before spending anything.</div>
+        <hr>
+        <ul>
+          <li><i data-lucide="check"></i> Full timetable builder</li>
+          <li><i data-lucide="check"></i> QR scan in &amp; out</li>
+          <li><i data-lucide="check"></i> Attendance reports</li>
+          <li><i data-lucide="check"></i> Up to 100 educators</li>
+        </ul>
+        <a href="{{ url_for('register') }}" class="plan-btn pb-dark">Start Free Trial</a>
+      </div>
+      <div class="plan hot"><div class="plan-badge">⭐ Popular</div>
+        <div class="plan-n">Annual Plan</div><div class="plan-p">Contact Us <span>/ year</span></div>
+        <div class="plan-d">Pay once, activated instantly with your access code. Valid for 12 months.</div>
+        <hr>
+        <ul>
+          <li><i data-lucide="check"></i> Everything in Trial</li>
+          <li><i data-lucide="check"></i> Unlimited educators</li>
+          <li><i data-lucide="check"></i> Split class support</li>
+          <li><i data-lucide="check"></i> CSV export</li>
+          <li><i data-lucide="check"></i> Email support</li>
+        </ul>
+        <a href="mailto:info@edutrack.co.za" class="plan-btn pb-teal">Contact Us</a>
+      </div>
+      <div class="plan"><div class="plan-badge">Waiver</div>
+        <div class="plan-n">Fee Waiver</div><div class="plan-p">Free <span>/ qualifying</span></div>
+        <div class="plan-d">For under-resourced schools. Apply with a short motivation. Reviewed within 2 days.</div>
+        <hr>
+        <ul>
+          <li><i data-lucide="check"></i> Full premium access</li>
+          <li><i data-lucide="check"></i> No payment required</li>
+          <li><i data-lucide="check"></i> Renewed annually</li>
+          <li><i data-lucide="check"></i> Same features as paid</li>
+        </ul>
+        <a href="{{ url_for('apply_waiver') }}" class="plan-btn pb-light">Apply for Waiver</a>
+      </div>
+    </div>
+    <div class="waiver-bar">
+      <div><h4>Is your school under-resourced?</h4><p>We believe every school deserves good tools regardless of budget. Apply for a fee waiver — takes 2 minutes.</p></div>
+      <a href="{{ url_for('apply_waiver') }}" class="wb-btn">Apply Now →</a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-brand">EduTrack</div>
+  <div class="footer-links">
+    <a href="{{ url_for('school_login') }}">School Login</a>
+    <a href="{{ url_for('register') }}">Register</a>
+    <a href="{{ url_for('apply_waiver') }}">Fee Waiver</a>
+    <span>© {{ now().year }} EduTrack</span>
+  </div>
+</footer>
+<script>lucide.createIcons()</script>
+</body>
+</html>

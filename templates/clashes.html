@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+{% block title %}Clash Report
+{% if splits_summary %}
+<!-- Splits summary (informational) -->
+<div class="card">
+  <div class="card-header" style="background:#f5f3ff;border-color:#e9d5ff">
+    <h3 style="color:#7c3aed">🔀 Split Classes Configured ({{ splits_summary|length }} groups)</h3>
+    <span style="font-size:.78rem;color:#7c3aed">These are legitimate splits — not clashes</span>
+  </div>
+  <div style="overflow-x:auto">
+    <table>
+      <thead><tr>
+        <th>Class</th><th>Split Type</th><th>Day</th>
+        <th>Period</th><th>Groups → Rooms</th>
+      </tr></thead>
+      <tbody>
+      {% for s in splits_summary %}
+      <tr style="background:#faf5ff">
+        <td><span class="badge" style="background:#e9d5ff;color:#7c3aed">{{ s.class_code }}</span></td>
+        <td style="font-size:.82rem;color:#6d28d9">{{ s.split_label or 'Split' }}</td>
+        <td><span class="badge badge-info">{{ s.day_of_week }}</span></td>
+        <td style="font-size:.82rem">{{ s.period_name }} ({{ s.start_time }})</td>
+        <td style="font-size:.8rem;color:#374151">{{ s.groups }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
+{% block page_title %}🔍 Timetable Clash Report
+{% if splits_summary %}
+<!-- Splits summary (informational) -->
+<div class="card">
+  <div class="card-header" style="background:#f5f3ff;border-color:#e9d5ff">
+    <h3 style="color:#7c3aed">🔀 Split Classes Configured ({{ splits_summary|length }} groups)</h3>
+    <span style="font-size:.78rem;color:#7c3aed">These are legitimate splits — not clashes</span>
+  </div>
+  <div style="overflow-x:auto">
+    <table>
+      <thead><tr>
+        <th>Class</th><th>Split Type</th><th>Day</th>
+        <th>Period</th><th>Groups → Rooms</th>
+      </tr></thead>
+      <tbody>
+      {% for s in splits_summary %}
+      <tr style="background:#faf5ff">
+        <td><span class="badge" style="background:#e9d5ff;color:#7c3aed">{{ s.class_code }}</span></td>
+        <td style="font-size:.82rem;color:#6d28d9">{{ s.split_label or 'Split' }}</td>
+        <td><span class="badge badge-info">{{ s.day_of_week }}</span></td>
+        <td style="font-size:.82rem">{{ s.period_name }} ({{ s.start_time }})</td>
+        <td style="font-size:.8rem;color:#374151">{{ s.groups }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
+{% block topbar_actions %}
+  <a href="{{ url_for('timetable') }}" class="btn-sm btn-outline">
+    <i data-lucide="arrow-left"></i> Back to Timetable
+  </a>
+
+{% if splits_summary %}
+<!-- Splits summary (informational) -->
+<div class="card">
+  <div class="card-header" style="background:#f5f3ff;border-color:#e9d5ff">
+    <h3 style="color:#7c3aed">🔀 Split Classes Configured ({{ splits_summary|length }} groups)</h3>
+    <span style="font-size:.78rem;color:#7c3aed">These are legitimate splits — not clashes</span>
+  </div>
+  <div style="overflow-x:auto">
+    <table>
+      <thead><tr>
+        <th>Class</th><th>Split Type</th><th>Day</th>
+        <th>Period</th><th>Groups → Rooms</th>
+      </tr></thead>
+      <tbody>
+      {% for s in splits_summary %}
+      <tr style="background:#faf5ff">
+        <td><span class="badge" style="background:#e9d5ff;color:#7c3aed">{{ s.class_code }}</span></td>
+        <td style="font-size:.82rem;color:#6d28d9">{{ s.split_label or 'Split' }}</td>
+        <td><span class="badge badge-info">{{ s.day_of_week }}</span></td>
+        <td style="font-size:.82rem">{{ s.period_name }} ({{ s.start_time }})</td>
+        <td style="font-size:.8rem;color:#374151">{{ s.groups }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block content %}
+
+<!-- Summary bar -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px">
+  <div class="stat-card">
+    <div class="stat-icon {% if total_clashes > 0 %}bg-red{% else %}bg-green{% endif %}">
+      <i class="fas fa-{% if total_clashes > 0 %}exclamation-triangle{% else %}check{% endif %}"></i></i>
+    </div>
+    <div>
+      <div class="stat-val" style="color:{% if total_clashes > 0 %}#ef4444{% else %}#16a34a{% endif %}">
+        {{ total_clashes }}
+      </div>
+      <div class="stat-lbl">Total Clashes</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-orange"><i data-lucide="users"></i></div>
+    <div>
+      <div class="stat-val" style="color:{% if teacher_clashes %}#ef4444{% else %}#16a34a{% endif %}">
+        {{ teacher_clashes|length }}
+      </div>
+      <div class="stat-lbl">Teacher Clashes</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-purple"><i data-lucide="door-open"></i></div>
+    <div>
+      <div class="stat-val" style="color:{% if room_clashes %}#ef4444{% else %}#16a34a{% endif %}">
+        {{ room_clashes|length }}
+      </div>
+      <div class="stat-lbl">Room Clashes</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-blue"><i data-lucide="calendar-check"></i></div>
+    <div>
+      <div class="stat-val">{{ total_slots }}</div>
+      <div class="stat-lbl">Total Slots</div>
+    </div>
+  </div>
+</div>
+
+{% if total_clashes == 0 and not overloaded and not unassigned %}
+<!-- All clear -->
+<div style="background:#dcfce7;border:1px solid #86efac;border-radius:12px;
+     padding:32px;text-align:center;margin-bottom:20px">
+  <div style="font-size:3rem;margin-bottom:12px">✅</div>
+  <div style="font-size:1.2rem;font-weight:700;color:#15803d;margin-bottom:6px">
+    No clashes found!
+  </div>
+  <div style="font-size:.88rem;color:#16a34a">
+    Your timetable has {{ total_slots }} slots with no teacher or room conflicts.
+  </div>
+</div>
+{% endif %}
+
+{% if teacher_clashes %}
+<!-- Teacher clashes -->
+<div class="card">
+  <div class="card-header" style="background:#fee2e2;border-color:#fca5a5">
+    <h3 style="color:#b91c1c">⛔ Teacher Clashes ({{ teacher_clashes|length }})</h3>
+    <span style="font-size:.78rem;color:#ef4444">Same teacher assigned to multiple rooms at the same time</span>
+  </div>
+  <div style="overflow-x:auto">
+    <table>
+      <thead><tr>
+        <th>Teacher</th><th>Day</th><th>Period</th><th>Time</th>
+        <th>Rooms Clashing</th><th>Action</th>
+      </tr></thead>
+      <tbody>
+      {% for c in teacher_clashes %}
+      <tr style="background:#fff5f5">
+        <td><strong style="color:#b91c1c">{{ c.teacher_name }}</strong></td>
+        <td><span class="badge badge-info">{{ c.day_of_week }}</span></td>
+        <td>{{ c.period_name }}</td>
+        <td style="font-family:monospace;font-size:.82rem">{{ c.start_time }}</td>
+        <td>
+          {% for room in c.rooms.split(', ') %}
+          <span class="badge badge-danger" style="margin-right:4px">{{ room }}</span>
+          {% endfor %}
+        </td>
+        <td>
+          <a href="{{ url_for('timetable') }}" class="btn-sm btn-danger"
+             style="font-size:.75rem;padding:3px 10px">
+            Fix →
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+{% if room_clashes %}
+<!-- Room clashes -->
+<div class="card">
+  <div class="card-header" style="background:#fef3c7;border-color:#fde68a">
+    <h3 style="color:#92400e">⚠️ Room Clashes ({{ room_clashes|length }})</h3>
+    <span style="font-size:.78rem;color:#d97706">Same room assigned to multiple teachers at the same time</span>
+  </div>
+  <div style="overflow-x:auto">
+    <table>
+      <thead><tr>
+        <th>Room</th><th>Day</th><th>Period</th><th>Time</th>
+        <th>Teachers Clashing</th><th>Action</th>
+      </tr></thead>
+      <tbody>
+      {% for c in room_clashes %}
+      <tr style="background:#fffbeb">
+        <td><strong style="color:#92400e">{{ c.room_code }}</strong></td>
+        <td><span class="badge badge-info">{{ c.day_of_week }}</span></td>
+        <td>{{ c.period_name }}</td>
+        <td style="font-family:monospace;font-size:.82rem">{{ c.start_time }}</td>
+        <td style="font-size:.82rem">{{ c.teachers }}</td>
+        <td>
+          <a href="{{ url_for('timetable') }}" class="btn-sm btn-warn"
+             style="font-size:.75rem;padding:3px 10px">
+            Fix →
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+{% if overloaded %}
+<!-- Overloaded teachers -->
+<div class="card">
+  <div class="card-header">
+    <h3>📋 Overloaded Teachers ({{ overloaded|length }})</h3>
+    <span style="font-size:.78rem;color:var(--muted)">Assigned more than 40 periods per week</span>
+  </div>
+  <table>
+    <thead><tr><th>Teacher</th><th>Total Slots</th><th>Over by</th></tr></thead>
+    <tbody>
+    {% for t in overloaded %}
+    <tr>
+      <td><strong>{{ t.teacher_name }}</strong></td>
+      <td><span class="badge badge-danger">{{ t.total_slots }}</span></td>
+      <td style="color:#ef4444;font-weight:600">+{{ t.total_slots - 40 }} periods</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% if unassigned %}
+<!-- Unassigned teachers -->
+<div class="card">
+  <div class="card-header">
+    <h3>👤 Teachers With No Timetable Slots ({{ unassigned|length }})</h3>
+    <span style="font-size:.78rem;color:var(--muted)">Active teachers not assigned to any class</span>
+  </div>
+  <div class="card-body">
+    {% for t in unassigned %}
+    <span class="badge badge-gray" style="margin:3px">{{ t.teacher_name }}</span>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- What to do -->
+{% if total_clashes > 0 %}
+<div class="card" style="background:#f8fafc">
+  <div class="card-header"><h3>💡 How to Fix Clashes</h3></div>
+  <div class="card-body" style="font-size:.86rem;line-height:1.9;color:#374151">
+    <strong>Teacher clash:</strong> The same teacher is assigned to two rooms at the same time.
+    Go to <a href="{{ url_for('timetable') }}" style="color:#2563a8">Manage Slots</a>,
+    find one of the clashing slots and delete it, then reassign that class to a different period or a different teacher.<br>
+    <strong>Room clash:</strong> Two teachers are assigned to the same room at the same time.
+    Go to <a href="{{ url_for('timetable') }}" style="color:#2563a8">Manage Slots</a>,
+    find one of the clashing slots and change the room to an available one.
+  </div>
+</div>
+{% endif %}
+
+
+{% if splits_summary %}
+<!-- Splits summary (informational) -->
+<div class="card">
+  <div class="card-header" style="background:#f5f3ff;border-color:#e9d5ff">
+    <h3 style="color:#7c3aed">🔀 Split Classes Configured ({{ splits_summary|length }} groups)</h3>
+    <span style="font-size:.78rem;color:#7c3aed">These are legitimate splits — not clashes</span>
+  </div>
+  <div style="overflow-x:auto">
+    <table>
+      <thead><tr>
+        <th>Class</th><th>Split Type</th><th>Day</th>
+        <th>Period</th><th>Groups → Rooms</th>
+      </tr></thead>
+      <tbody>
+      {% for s in splits_summary %}
+      <tr style="background:#faf5ff">
+        <td><span class="badge" style="background:#e9d5ff;color:#7c3aed">{{ s.class_code }}</span></td>
+        <td style="font-size:.82rem;color:#6d28d9">{{ s.split_label or 'Split' }}</td>
+        <td><span class="badge badge-info">{{ s.day_of_week }}</span></td>
+        <td style="font-size:.82rem">{{ s.period_name }} ({{ s.start_time }})</td>
+        <td style="font-size:.8rem;color:#374151">{{ s.groups }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
+{# Append splits summary section before endblock #}

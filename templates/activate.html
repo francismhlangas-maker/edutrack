@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% block title %}Activate Plan{% endblock %}{% block page_title %}🔑 Activate / Renew Plan{% endblock %}
+{% block content %}
+<div style="max-width:500px;margin:0 auto">
+<div class="card"><div class="card-header"><h3>Enter Your Access Code</h3></div>
+<div class="card-body">
+<p style="font-size:.86rem;color:#64748b;margin-bottom:20px;line-height:1.6">
+Enter the access code you received after payment. The code activates your plan and sets your expiry date automatically.
+If you need a code, contact EduTrack to arrange payment.
+</p>
+{% with messages=get_flashed_messages(with_categories=true) %}{% for cat,msg in messages %}<div class="flash flash-{{ cat }}">{{ msg }}</div>{% endfor %}{% endwith %}
+<form method="POST">
+<div class="form-group"><label>Access Code</label>
+<input type="text" name="code" required placeholder="EDT-XXXX-XXXX-XXXX"
+  style="font-family:monospace;font-size:1.1rem;letter-spacing:.1em;text-transform:uppercase"
+  oninput="this.value=this.value.toUpperCase()"></div>
+<button type="submit" class="btn-sm btn-success" style="width:100%;padding:12px;font-size:.95rem">
+✅ Activate Plan</button>
+</form>
+<div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--border);font-size:.82rem;color:#64748b">
+<strong>Need a code?</strong> Contact us at <a href="mailto:info@edutrack.co.za" style="color:#2563a8">info@edutrack.co.za</a>
+to arrange payment. Once confirmed we generate a code and send it to you immediately.<br><br>
+<strong>Need a fee waiver?</strong> <a href="{{ url_for('apply_waiver') }}" style="color:#16a34a">Apply here</a> — for qualifying under-resourced schools.
+</div></div></div></div>{% endblock %}

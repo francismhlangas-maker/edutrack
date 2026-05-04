@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block title %}Dashboard – BASA{% endblock %}
+{% block page_title %}📊 Today's Dashboard{% endblock %}
+
+{% block content %}
+<!-- KPI cards -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-icon bg-blue"><i data-lucide="calendar-check"></i></div>
+    <div><div class="stat-val">{{ scheduled_today }}</div><div class="stat-lbl">Periods Scheduled</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-green"><i data-lucide="log-in"></i></div>
+    <div><div class="stat-val">{{ checkins_today }}</div><div class="stat-lbl">Checked In Today</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-orange"><i data-lucide="clock"></i></div>
+    <div>
+      <div class="stat-val" style="color:{% if late_today > 0 %}#ef4444{% else %}#16a34a{% endif %}">{{ late_today }}</div>
+      <div class="stat-lbl">Late Arrivals</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-red"><i data-lucide="door-open"></i></div>
+    <div>
+      <div class="stat-val" style="color:{% if left_early > 0 %}#ef4444{% else %}#16a34a{% endif %}">{{ left_early }}</div>
+      <div class="stat-lbl">Left Early</div>
+    </div>
+  </div>
+</div>
+
+<div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-top:-8px">
+  <div class="stat-card">
+    <div class="stat-icon bg-purple"><i data-lucide="hourglass"></i></div>
+    <div><div class="stat-val">{{ in_room|length }}</div><div class="stat-lbl">Currently In Room</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-red"><i data-lucide="exclamation-circle"></i></div>
+    <div>
+      <div class="stat-val" style="color:{% if no_checkout > 0 %}#f59e0b{% else %}#16a34a{% endif %}">{{ no_checkout }}</div>
+      <div class="stat-lbl">No Checkout Yet</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-green"><i data-lucide="timer"></i></div>
+    <div><div class="stat-val">{{ avg_dur|int }}<span style="font-size:1rem">m</span></div><div class="stat-lbl">Avg Time in Room</div></div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1.1fr 0.9fr;gap:18px">
+
+  <!-- Recent Activity -->
+  <div class="card">
+    <div class="card-header">
+      <h3>🕐 Recent Activity</h3>
+      <a href="{{ url_for('attendance') }}" class="btn-sm btn-outline">View All</a>
+    </div>
+    <div style="overflow-x:auto">
+      {% if recent %}
+      <table style="font-size:.8rem">
+        <thead><tr>
+          <th>Teacher</th><th>Room</th><th>Period</th>
+          <th>In</th><th>Out</th><th>Duration</th><th>Status</th>
+        </tr></thead>
+        <tbody>
+        {% for r in recent %}
+        <tr>
+          <td><strong>{{ r.teacher_name }}</strong></td>
+          <td><span class="badge badge-info">{{ r.room_code }}</span></td>
+          <td style="color:#64748b;font-size:.72rem">{{ r.period_name or '—' }}</td>
+          <td style="font-weight:600">{{ r.scan_in_time }}</td>
+          <td style="color:{% if r.scan_out_time %}#16a34a{% else %}#94a3b8{% endif %};font-weight:600">
+            {{ r.scan_out_time or '…' }}
+          </td>
+          <td>
+            {% if r.duration_mins is not none %}
+              <span style="font-weight:600">{{ r.duration_mins }}m</span>
+            {% elif r.scan_out_time is none %}
+              <span style="color:#f59e0b;font-size:.72rem">In room</span>
+            {% else %}—{% endif %}
+          </td>
+          <td>
+            {% if r.in_status == 'ON_TIME' and r.out_status in ('COMPLETED','PRESENT') %}
+              <span class="badge badge-success">✅</span>
+            {% elif r.out_status == 'LEFT_EARLY' %}
+              <span class="badge badge-danger">🚪 Early</span>
+            {% elif r.in_status == 'LATE' %}
+              <span class="badge badge-warn">⚠️ Late</span>
+            {% elif r.scan_out_time is none %}
+              <span class="badge badge-info">🟢 In</span>
+            {% else %}
+              <span class="badge badge-gray">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div style="padding:32px;text-align:center;color:#94a3b8;font-size:.86rem">
+        No check-ins recorded yet today.<br>
+        Teachers scan the QR code in their classroom.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:18px">
+
+    <!-- Currently in room -->
+    <div class="card">
+      <div class="card-header">
+        <h3>🟢 Currently Teaching</h3>
+        <span style="font-size:.72rem;color:#64748b">Checked in, not yet out</span>
+      </div>
+      {% if in_room %}
+      <table style="font-size:.82rem">
+        <thead><tr><th>Teacher</th><th>Room</th><th>In Since</th></tr></thead>
+        <tbody>
+        {% for r in in_room %}
+        <tr>
+          <td><strong>{{ r.teacher_name }}</strong></td>
+          <td><span class="badge badge-success">{{ r.room_code }}</span></td>
+          <td>{{ r.scan_in_time }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div style="padding:18px;text-align:center;color:#94a3b8;font-size:.82rem">
+        Nobody currently checked in.
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Missing / not yet checked in -->
+    <div class="card">
+      <div class="card-header">
+        <h3>🔴 Not Yet Checked In</h3>
+        <span style="font-size:.72rem;color:#64748b">Past periods only</span>
+      </div>
+      {% if missing %}
+      <table style="font-size:.8rem">
+        <thead><tr><th>Teacher</th><th>Room</th><th>Period</th><th>Was due</th></tr></thead>
+        <tbody>
+        {% for m in missing %}
+        <tr>
+          <td><strong>{{ m.teacher_name }}</strong></td>
+          <td><span class="badge badge-danger">{{ m.room_code }}</span></td>
+          <td>{{ m.period_name }}</td>
+          <td style="color:#ef4444;font-weight:600">{{ m.start_time }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div style="padding:18px;text-align:center;color:#16a34a;font-size:.82rem">
+        ✅ All scheduled teachers have checked in!
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+
+<!-- Quick links -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:4px">
+  {% for label, icon, url in [
+    ('View Timetable','📅', url_for('timetable_view')),
+    ('Print QR Codes','🖨️', url_for('rooms')),
+    ('Attendance Report','📊', url_for('attendance')),
+    ('Manage Teachers','👨‍🏫', url_for('teachers'))
+  ] %}
+  <a href="{{ url }}" style="text-decoration:none">
+    <div class="card" style="text-align:center;padding:18px;cursor:pointer;
+         transition:transform .15s" onmouseover="this.style.transform='translateY(-3px)'"
+         onmouseout="this.style.transform=''">
+      <div style="font-size:1.8rem;margin-bottom:8px">{{ icon }}</div>
+      <div style="font-size:.84rem;font-weight:600;color:#1a3c5e">{{ label }}</div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Timetable Grid{% endblock %}
+{% block page_title %}📅 Timetable Grid{% endblock %}
+{% block topbar_actions %}
+  <a href="{{ url_for('timetable') }}" class="btn-sm btn-outline">
+    <i data-lucide="pencil"></i> Manage Slots
+  </a>
+  <button onclick="window.print()" class="btn-sm btn-primary">
+    <i data-lucide="printer"></i> Print
+  </button>
+{% endblock %}
+
+{% block content %}
+<style>
+.tt-wrap{overflow-x:auto}
+.tt-table{border-collapse:collapse;min-width:900px;width:100%;font-size:.78rem}
+.tt-table th{background:#1a3c5e;color:#fff;padding:8px 10px;text-align:center;
+  border:1px solid #2563a8;white-space:nowrap}
+.tt-table td{border:1px solid #e2e8f0;padding:0;vertical-align:top;
+  min-width:130px;background:#fff}
+.tt-table td.period-label{background:#f8fafc;font-size:.75rem;font-weight:600;
+  color:#64748b;padding:6px 10px;white-space:nowrap;min-width:90px}
+.slot{padding:6px 8px;min-height:52px;display:flex;flex-direction:column;gap:2px}
+.slot-teacher{font-weight:700;color:#1a3c5e;font-size:.78rem}
+.slot-subject{font-size:.72rem;color:#2563a8}
+.slot-room{font-size:.68rem;color:#94a3b8}
+.break-row td{background:#fffbeb!important}
+.break-label{color:#d97706;font-style:italic}
+@media print{
+  .sidebar,.topbar{display:none!important}
+  .main{display:block!important}
+  .content{padding:0!important}
+  .card{box-shadow:none!important;border:none!important}
+}
+
+/* Day filter tabs */
+.day-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.day-tab{padding:7px 18px;border-radius:8px;border:2px solid #e2e8f0;background:#fff;
+  cursor:pointer;font-size:.84rem;font-weight:600;color:#64748b;transition:all .2s}
+.day-tab.active,.day-tab:hover{background:#1a3c5e;color:#fff;border-color:#1a3c5e}
+</style>
+
+<div class="day-tabs">
+  <button class="day-tab active" onclick="showDay('all',this)">All Days</button>
+  {% for day in days %}
+  <button class="day-tab" onclick="showDay('{{ day }}',this)">{{ day }}</button>
+  {% endfor %}
+</div>
+
+<div class="card">
+  <div class="tt-wrap">
+    <table class="tt-table">
+      <thead>
+        <tr>
+          <th>Period</th>
+          {% for day in days %}<th class="day-col" data-day="{{ day }}">{{ day }}</th>{% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+      {% for period in periods %}
+      <tr class="{% if period.is_break %}break-row{% endif %}" data-period="{{ period.id }}">
+        <td class="period-label {% if period.is_break %}break-label{% endif %}">
+          {{ period.name }}<br>
+          <span style="font-weight:400;font-size:.7rem">{{ period.start_time }}–{{ period.end_time }}</span>
+        </td>
+        {% for day in days %}
+        <td class="day-col" data-day="{{ day }}">
+          {% if period.is_break %}
+          <div style="padding:6px 8px;color:#d97706;font-style:italic;font-size:.75rem">
+            ☕ {{ period.name }}
+          </div>
+          {% else %}
+            {% if grid[day][period.id] %}
+              {% for room_code, slot in grid[day][period.id].items() %}
+              <div class="slot" style="border-bottom:1px dashed #f1f5f9">
+                <div class="slot-teacher">{{ slot.initials }} {{ slot.teacher_name.split(' ')[-1] }}</div>
+                <div class="slot-subject">{{ slot.subject[:20] }}</div>
+                <div class="slot-room"><i class="fas fa-door-open" style="font-size:.6rem"></i> {{ room_code }}</div>
+              </div>
+              {% endfor %}
+            {% else %}
+            <div style="padding:6px 8px;color:#e2e8f0;font-size:.72rem">—</div>
+            {% endif %}
+          {% endif %}
+        </td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+function showDay(day, btn){
+  document.querySelectorAll('.day-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.day-col').forEach(el=>{
+    el.style.display = (day==='all' || el.dataset.day===day) ? '' : 'none';
+  });
+}
+</script>
+{% endblock %}

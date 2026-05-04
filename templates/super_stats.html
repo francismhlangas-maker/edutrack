@@ -1,0 +1,12 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>EduTrack Stats</title>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;padding:30px}.back{color:#e8a020;text-decoration:none;font-size:.84rem;display:inline-block;margin-bottom:20px}h1{font-size:1.4rem;font-weight:800;margin-bottom:24px}.card{background:#1e293b;border-radius:10px;border:1px solid #334155;margin-bottom:20px;overflow:hidden}.card-header{padding:12px 18px;border-bottom:1px solid #334155;font-weight:600;font-size:.9rem}table{width:100%;border-collapse:collapse;font-size:.82rem}th{text-align:left;padding:9px 14px;background:rgba(255,255,255,.04);color:#94a3b8;border-bottom:1px solid #334155}td{padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.05)}</style></head>
+<body><a href="{{ url_for('super_dashboard') }}" class="back">← Back to Dashboard</a>
+<h1>📊 Platform Statistics</h1>
+<div class="card"><div class="card-header">Monthly Scans (last 12 months)</div>
+<table><thead><tr><th>Month</th><th>Total Scans</th><th>Late</th><th>Left Early</th></tr></thead><tbody>
+{% for m in monthly %}<tr><td>{{ m.month }}</td><td>{{ m.scans }}</td><td>{{ m.late }}</td><td>{{ m.left_early }}</td></tr>{% endfor %}
+</tbody></table></div>
+<div class="card"><div class="card-header">Top Schools by Activity</div>
+<table><thead><tr><th>School</th><th>Total Scans</th></tr></thead><tbody>
+{% for s in top_schools %}<tr><td>{{ s.name }}</td><td>{{ s.scans }}</td></tr>{% endfor %}
+</tbody></table></div></body></html>
